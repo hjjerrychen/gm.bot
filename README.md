@@ -1,2 +1,3 @@
 # gm.bot
-good morning discord bot hosted on repl.it
+discord bot that tracks good morning streaks.
+
