@@ -1,11 +1,14 @@
 import os
 import discord
 import db_utils as dbu
-from replit import db
 from discord.ext import commands
 from auxiliary import top_users
-from web_server import persist
+from dotenv import load_dotenv
+import sqlite3
 
+con = sqlite3.connect(os.environ['DB_FILE'] or "gm-bot.db")
+
+load_dotenv() 
 
 bot = commands.Bot(command_prefix='', intents=discord.Intents.default())
 
@@ -28,7 +31,7 @@ async def on_command_error(ctx, error):
 @commands.cooldown(1, 60, commands.BucketType.member)
 @bot.command(aliases=['Gm', 'GM'])
 async def gm(ctx):
-    user_id, guild_id = ctx.author.id, ctx.guild.id
+    user_id, guild_id, discord_name = ctx.author.id, ctx.guild.id, ctx.author.name
     key = str((user_id, guild_id))
 
     if not dbu.user_exists(key):
@@ -65,23 +68,22 @@ async def gmboard(ctx):
     await ctx.message.add_reaction('✅')
 
 
-@bot.command()
-async def force(ctx, *args):
-    if ctx.author.id != 190276271488499713:
-        await ctx.send('no')
-        await ctx.message.add_reaction('❌')
-    else:
-        guild_id, target_id, count, streak = ctx.guild.id, int(args[0]), int(args[1]), int(args[2])
-        key = str((target_id, guild_id))
+# @bot.command()
+# async def force(ctx, *args):
+#     if ctx.author.id != 190276271488499713:
+#         await ctx.send('no')
+#         await ctx.message.add_reaction('❌')
+#     else:
+#         guild_id, target_id, count, streak = ctx.guild.id, int(args[0]), int(args[1]), int(args[2])
+#         key = str((target_id, guild_id))
 
-        if not dbu.user_exists(key):
-            await ctx.send(f'no key in database for user {target_id} and guild {guild_id}')
-            await ctx.message.add_reaction('❌')
-        else:
-            curr_count, curr_streak, curr_day = db[key]  # grab current values
-            db[key] = [count, streak, curr_day]  # then update
-            await ctx.send(f'updated user successfully')
-            await ctx.message.add_reaction('✅')
+#         if not dbu.user_exists(key):
+#             await ctx.send(f'no key in database for user {target_id} and guild {guild_id}')
+#             await ctx.message.add_reaction('❌')
+#         else:
+#             curr_count, curr_streak, curr_day = db[key]  # grab current values
+#             db[key] = [count, streak, curr_day]  # then update
+#             await ctx.send(f'updated user successfully')
+#             await ctx.message.add_reaction('✅')
 
-persist()
 bot.run(os.environ['TOKEN'])
