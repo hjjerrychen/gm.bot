@@ -8,7 +8,6 @@ current schema
 
 import time
 from enum import Enum
-from replit import db
 
 
 class Db(Enum):
