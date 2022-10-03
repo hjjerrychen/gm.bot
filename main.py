@@ -37,7 +37,7 @@ async def on_command_error(ctx, error):
         raise error
 
 
-# @commands.cooldown(1, 60, commands.BucketType.member)
+@commands.cooldown(1, 60, commands.BucketType.member)
 @bot.command(aliases=["Gm", "GM"])
 async def gm(ctx):
     user_id, username, server_id, server_name = (
@@ -115,7 +115,7 @@ async def gm(ctx):
     await ctx.message.add_reaction("✅")
 
 
-# @commands.cooldown(1, 60, commands.BucketType.member)
+@commands.cooldown(1, 60, commands.BucketType.member)
 @bot.command(aliases=["Gmself"])
 async def gmself(ctx):
     key = str(ctx.author.id) + str(ctx.guild.id)
@@ -132,7 +132,7 @@ async def gmself(ctx):
         await ctx.message.add_reaction("✅")
 
 
-# @commands.cooldown(1, 60, commands.BucketType.member)
+@commands.cooldown(1, 60, commands.BucketType.member)
 @bot.command(aliases=['Gmboard'])
 async def gmboard(ctx):
     top_users = db.getTopUsers(ctx.guild.id)
