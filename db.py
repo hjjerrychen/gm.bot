@@ -2,7 +2,7 @@ import sqlite3
 
 
 class GmBotDb:
-    createStreakTableQuery = "CREATE TABLE IF NOT EXISTS streak(id TEXT PRIMARY KEY, discord_user_id TEXT, discord_username TEXT, discord_server_id TEXT, discord_server_name TEXT, current_count INTEGER, last_gm_on TEXT, longest_streak INTEGER, last_longest_streak_on TEXT) STRICT"
+    createStreakTableQuery = "CREATE TABLE IF NOT EXISTS streak(id TEXT PRIMARY KEY, discord_user_id TEXT, discord_username TEXT, discord_server_id TEXT, discord_server_name TEXT, current_count INTEGER, last_gm_on TEXT, longest_streak INTEGER, last_longest_streak_on TEXT)"
     getStreakQuery = "SELECT current_count, last_gm_on, longest_streak, last_longest_streak_on, discord_username, discord_server_name FROM streak WHERE id = ?"
     newUserQuery = "INSERT INTO streak VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
     updateUserQuery = "UPDATE streak SET current_count = ?, last_gm_on = ?, longest_streak = ?, last_longest_streak_on = ?, discord_username = ?, discord_server_name = ? WHERE id = ?"
