@@ -1,20 +1,27 @@
 import os
-import discord
-import db_utils as dbu
-from discord.ext import commands
-from auxiliary import top_users
-from dotenv import load_dotenv
 import sqlite3
+from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
 
-con = sqlite3.connect(os.environ['DB_FILE'] or "gm-bot.db")
+import discord
+from discord.ext import commands
+from dotenv import load_dotenv
 
-load_dotenv() 
+from db import GmBotDb
 
-bot = commands.Bot(command_prefix='', intents=discord.Intents.default())
+
+load_dotenv()
+db = GmBotDb(os.environ["DB_FILE"] or "gm-bot.db")
+bot = commands.Bot(command_prefix="", intents=discord.Intents.all())
+
+
+def main():
+    bot.run(os.environ["TOKEN"])
+
 
 @bot.event
 async def on_ready():
-    print('gm - bot has been activated')
+    print("gm.bot has started")
 
 
 @bot.event
@@ -22,68 +29,118 @@ async def on_command_error(ctx, error):
     if isinstance(error, commands.errors.CommandNotFound):
         return
     elif isinstance(error, commands.CommandOnCooldown):
-        await ctx.send(f'using command too soon. try again in {round(error.retry_after)} seconds')
-        await ctx.message.add_reaction('❌')
+        await ctx.send(
+            f"using command too soon. try again in {round(error.retry_after)} seconds"
+        )
+        await ctx.message.add_reaction("❌")
     else:
         raise error
 
 
-@commands.cooldown(1, 60, commands.BucketType.member)
-@bot.command(aliases=['Gm', 'GM'])
+# @commands.cooldown(1, 60, commands.BucketType.member)
+@bot.command(aliases=["Gm", "GM"])
 async def gm(ctx):
-    user_id, guild_id, discord_name = ctx.author.id, ctx.guild.id, ctx.author.name
-    key = str((user_id, guild_id))
+    user_id, username, server_id, server_name = (
+        str(ctx.author.id),
+        str(ctx.author),
+        str(ctx.guild.id),
+        str(ctx.guild),
+    )
+    key = user_id + server_id
+    streak_record = db.getStreak(key)
+    utc = ZoneInfo("UTC")
+    eastern = ZoneInfo("America/Toronto")
+    now = datetime.now(utc)
 
-    if not dbu.user_exists(key):
-        dbu.add_user(key)
+    if not streak_record:
+        db.newUser(
+            (
+                key,
+                user_id,
+                username,
+                server_id,
+                server_name,
+                1,
+                now.isoformat(),
+                1,
+                now.isoformat(),
+            )
+        )
+        await ctx.send(f"good morning ☀️ your gm count is **1** and streak is **1**")
 
-    error = dbu.update_user(key)
+        await ctx.message.add_reaction("✅")
+        return
 
-    if error:
-        await ctx.send(f'once per day only. try again tomorrow')
-        await ctx.message.add_reaction('❌')
+    last_gm_date_localized = (
+        datetime.fromisoformat(streak_record[1]).astimezone(eastern).date()
+    )
+    yesterdays_date_localized = (now.astimezone(eastern) - timedelta(0, 1)).date()
+    todays_date_localized = now.astimezone(eastern).date()
+
+    current_count = streak_record[0]
+    last_gm_on = now.isoformat()
+    longest_streak_count = streak_record[2]
+    last_longest_streak_on = streak_record[3]
+
+    if last_gm_date_localized == todays_date_localized:
+        await ctx.send(f"once per day only. try again tomorrow")
+        await ctx.message.add_reaction("❌")
+        return
+
+    elif last_gm_date_localized == yesterdays_date_localized:
+        current_count += 1
+        longest_streak_count = max(current_count, longest_streak_count)
+        last_longest_streak_on = (
+            now.isoformat()
+            if longest_streak_count != streak_record[0]
+            else last_longest_streak_on
+        )
     else:
-        await ctx.send(f'thank you for your patronage. your gm count is **{db[key][dbu.Db.COUNT.value]}** and streak is **{db[key][dbu.Db.STREAK.value]}**')
-        await ctx.message.add_reaction('✅')
+        current_count = 1
+
+    db.updateUser(
+        (
+            current_count,
+            last_gm_on,
+            longest_streak_count,
+            last_longest_streak_on,
+            username,
+            server_name,
+            key,
+        )
+    )
+    await ctx.send(
+        f"good morning ☀️ your gm count is **{current_count}** and streak is **{longest_streak_count}**"
+    )
+    await ctx.message.add_reaction("✅")
 
 
-@commands.cooldown(1, 60, commands.BucketType.member)
-@bot.command(aliases=['Gmself'])
+# @commands.cooldown(1, 60, commands.BucketType.member)
+@bot.command(aliases=["Gmself"])
 async def gmself(ctx):
-    user_id, guild_id = ctx.author.id, ctx.guild.id
-    key = str((user_id, guild_id))
+    key = str(ctx.author.id) + str(ctx.guild.id)
+    streak_record = db.getStreak(key)
+    eastern = ZoneInfo("America/Toronto")
 
-    if not dbu.user_exists(key):
-        await ctx.send(f'no record of you saying gm')
-        await ctx.message.add_reaction('❌')
+    if not streak_record:
+        await ctx.send(f"no record of you saying gm")
+        await ctx.message.add_reaction("❌")
     else:
-        await ctx.send(f'count: **{db[key][dbu.Db.COUNT.value]}** \nstreak: **{db[key][dbu.Db.STREAK.value]}**')
-        await ctx.message.add_reaction('✅')
+        await ctx.send(
+            f'count: **{streak_record[0]}** on {datetime.fromisoformat(streak_record[1]).astimezone(eastern).strftime("%Y-%m-%d %I:%M %p")} ET \nstreak: **{streak_record[2]}** on {datetime.fromisoformat(streak_record[3]).astimezone(eastern).strftime("%Y-%m-%d %I:%M %p")} ET'
+        )
+        await ctx.message.add_reaction("✅")
 
 
-@commands.cooldown(1, 60, commands.BucketType.member)
+# @commands.cooldown(1, 60, commands.BucketType.member)
 @bot.command(aliases=['Gmboard'])
 async def gmboard(ctx):
-    await ctx.send(embed = await top_users(bot, ctx))
+    top_users = db.getTopUsers(ctx.guild.id)
+    top_users_string = "\n".join([f"{line[0]} / {line[1]} / {line[2]}" for line in top_users])
+    embed = discord.Embed(title='gm.bot leaderboard', color=0x87CEEB)
+    embed.add_field(name='User / Count / Streak', value=top_users_string, inline=False)
+    await ctx.send(embed = embed)
     await ctx.message.add_reaction('✅')
 
-
-# @bot.command()
-# async def force(ctx, *args):
-#     if ctx.author.id != 190276271488499713:
-#         await ctx.send('no')
-#         await ctx.message.add_reaction('❌')
-#     else:
-#         guild_id, target_id, count, streak = ctx.guild.id, int(args[0]), int(args[1]), int(args[2])
-#         key = str((target_id, guild_id))
-
-#         if not dbu.user_exists(key):
-#             await ctx.send(f'no key in database for user {target_id} and guild {guild_id}')
-#             await ctx.message.add_reaction('❌')
-#         else:
-#             curr_count, curr_streak, curr_day = db[key]  # grab current values
-#             db[key] = [count, streak, curr_day]  # then update
-#             await ctx.send(f'updated user successfully')
-#             await ctx.message.add_reaction('✅')
-
-bot.run(os.environ['TOKEN'])
+if __name__ == "__main__":
+    main()
