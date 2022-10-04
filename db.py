@@ -31,5 +31,5 @@ class GmBotDb:
         self.cursor.execute(GmBotDb.updateUserQuery, data)
     
     def getTopUsers(self, discord_server_id: str, limit: int = 10):
-        return self.cursor.execute(GmBotDb.topUsersQuery, (discord_server_id, limit))
+        return self.cursor.execute(GmBotDb.topUsersQuery, (discord_server_id, limit)).fetchall()
 

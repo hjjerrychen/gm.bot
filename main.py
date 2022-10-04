@@ -74,7 +74,7 @@ async def gm(ctx):
     last_gm_date_localized = (
         datetime.fromisoformat(streak_record[1]).astimezone(eastern).date()
     )
-    yesterdays_date_localized = (now.astimezone(eastern) - timedelta(0, 1)).date()
+    yesterdays_date_localized = (now.astimezone(eastern) - timedelta(1)).date()
     todays_date_localized = now.astimezone(eastern).date()
 
     current_count = streak_record[0]
@@ -127,20 +127,42 @@ async def gmself(ctx):
         await ctx.message.add_reaction("❌")
     else:
         await ctx.send(
-            f'count: **{streak_record[0]}** on {datetime.fromisoformat(streak_record[1]).astimezone(eastern).strftime("%Y-%m-%d %I:%M %p")} ET \nstreak: **{streak_record[2]}** on {datetime.fromisoformat(streak_record[3]).astimezone(eastern).strftime("%Y-%m-%d %I:%M %p")} ET'
+            f'**Stats for `{str(ctx.author)}`**\ncount: **`{streak_record[0]}`** gm\'ed on `{datetime.fromisoformat(streak_record[1]).astimezone(eastern).strftime("%Y-%m-%d %I:%M %p")} ET`\nstreak: **`{streak_record[2]}`** set on `{datetime.fromisoformat(streak_record[3]).astimezone(eastern).strftime("%Y-%m-%d %I:%M %p")} ET`'
         )
         await ctx.message.add_reaction("✅")
 
 
 @commands.cooldown(1, 60, commands.BucketType.member)
-@bot.command(aliases=['Gmboard'])
+@bot.command(aliases=["Gmboard"])
 async def gmboard(ctx):
     top_users = db.getTopUsers(ctx.guild.id)
-    top_users_string = "\n".join([f"{line[0]} / {line[1]} / {line[2]}" for line in top_users])
-    embed = discord.Embed(title='gm.bot leaderboard', color=0x87CEEB)
-    embed.add_field(name='User / Count / Streak', value=top_users_string, inline=False)
-    await ctx.send(embed = embed)
-    await ctx.message.add_reaction('✅')
+    top_users_string = "no one gm'ed in this server"
+    if top_users:
+        top_users_string = "\n".join(
+            [f"{line[0]}: {line[1]} / {line[2]}" for line in top_users]
+        )
+    embed = discord.Embed(title="gm.bot leaderboard", color=0x87CEEB)
+    embed.add_field(name="User / Count / Streak", value=top_users_string, inline=False)
+    await ctx.send(embed=embed)
+    await ctx.message.add_reaction("✅")
+
+
+@commands.cooldown(1, 60, commands.BucketType.member)
+@bot.command(aliases=["Gmhelp"])
+async def gmhelp(ctx):
+    help_text = """
+    **gm.bot help**
+    **gm** - records daily gm
+    **gmself** - stats about yourself
+    **gmboard** - top 10 gm'ers by streak
+    **gmhelp** - shows this menu
+
+`Version 7.0-beta2`
+<https://github.com/jerry70450/gm.bot>
+    """
+    await ctx.send(help_text)
+    await ctx.message.add_reaction("✅")
+
 
 if __name__ == "__main__":
     main()
