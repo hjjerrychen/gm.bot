@@ -64,9 +64,11 @@ async def gm(ctx):
                 now.isoformat(),
                 1,
                 now.isoformat(),
+                1,
+                now.isoformat()
             )
         )
-        await ctx.send(f"good morning ☀️ your gm count is **1** and streak is **1**")
+        await ctx.send(f"good morning ☀️ your gm count is **1**, current streak is 1 and longest streak is **1**")
 
         await ctx.message.add_reaction("✅")
         return
@@ -81,22 +83,24 @@ async def gm(ctx):
     last_gm_on = now.isoformat()
     longest_streak_count = streak_record[2]
     last_longest_streak_on = streak_record[3]
+    current_streak_count = streak_record[7]
 
     if last_gm_date_localized == todays_date_localized:
         await ctx.send(f"once per day only. try again tomorrow")
         await ctx.message.add_reaction("❌")
         return
-
     elif last_gm_date_localized == yesterdays_date_localized:
+        current_streak_count += 1
         current_count += 1
-        longest_streak_count = max(current_count, longest_streak_count)
+        longest_streak_count = max(current_streak_count, longest_streak_count)
         last_longest_streak_on = (
             now.isoformat()
-            if longest_streak_count != streak_record[0]
+            if longest_streak_count != streak_record[2]
             else last_longest_streak_on
         )
     else:
-        current_count = 1
+        current_streak_count = 1
+        current_count += 1
 
     db.updateUser(
         (
@@ -106,11 +110,12 @@ async def gm(ctx):
             last_longest_streak_on,
             username,
             server_name,
+            current_streak_count,
             key,
         )
     )
     await ctx.send(
-        f"good morning ☀️ your gm count is **{current_count}** and streak is **{longest_streak_count}**"
+        f"good morning ☀️ your gm count is **{current_count}**, current streak is **{current_streak_count}**, and longest streak is **{longest_streak_count}**"
     )
     await ctx.message.add_reaction("✅")
 
@@ -127,7 +132,7 @@ async def gmself(ctx):
         await ctx.message.add_reaction("❌")
     else:
         await ctx.send(
-            f'**Stats for `{str(ctx.author)}`**\ncount: **`{streak_record[0]}`** gm\'ed on `{datetime.fromisoformat(streak_record[1]).astimezone(eastern).strftime("%Y-%m-%d %I:%M %p")} ET`\nstreak: **`{streak_record[2]}`** set on `{datetime.fromisoformat(streak_record[3]).astimezone(eastern).strftime("%Y-%m-%d %I:%M %p")} ET`'
+            f'**Stats for `{str(ctx.author)}`**\nlast gm\'ed on `{datetime.fromisoformat(streak_record[1]).astimezone(eastern).strftime("%Y-%m-%d %I:%M %p")} ET`\ncount: **`{streak_record[0]}`**\ncurrent streak: **`{streak_record[7]}`**\nlongest streak: **`{streak_record[2]}`** set on `{datetime.fromisoformat(streak_record[3]).astimezone(eastern).strftime("%Y-%m-%d %I:%M %p")} ET`\nfirst gm\'ed on `{datetime.fromisoformat(streak_record[6]).astimezone(eastern).strftime("%Y-%m-%d %I:%M %p")} ET`'
         )
         await ctx.message.add_reaction("✅")
 
@@ -139,10 +144,10 @@ async def gmboard(ctx):
     top_users_string = "no one gm'ed in this server"
     if top_users:
         top_users_string = "\n".join(
-            [f"{line[0]}: {line[1]} / {line[2]}" for line in top_users]
+            [f"**`{line[0]}:`** {line[1]} / {line[2]} / {line[3]}" for line in top_users]
         )
     embed = discord.Embed(title="gm.bot leaderboard", color=0x87CEEB)
-    embed.add_field(name="User / Count / Streak", value=top_users_string, inline=False)
+    embed.add_field(name="User: Count / Current Streak / Longest Streak", value=top_users_string, inline=False)
     await ctx.send(embed=embed)
     await ctx.message.add_reaction("✅")
 
@@ -157,7 +162,7 @@ async def gmhelp(ctx):
     **gmboard** - top 10 gm'ers by streak
     **gmhelp** - shows this menu
 
-`Version 7.0-beta2`
+`Version 7.0-beta3`
 <https://github.com/jerry70450/gm.bot>
     """
     await ctx.send(help_text)
