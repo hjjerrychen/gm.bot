@@ -1,5 +1,6 @@
 import discord
 import heapq
+from replit import db
 
 async def top_users(bot, ctx):
     guild_users = []
