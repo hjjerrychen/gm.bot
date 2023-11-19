@@ -1,14 +1,12 @@
 import os
-import sqlite3
 from datetime import datetime, timedelta
-from zoneinfo import ZoneInfo
 
 import discord
 from discord.ext import commands
 from dotenv import load_dotenv
+from zoneinfo import ZoneInfo
 
 from db import GmBotDb
-
 
 load_dotenv()
 db = GmBotDb(os.environ["DB_FILE"] or "gm-bot.db")
@@ -37,9 +35,24 @@ async def on_command_error(ctx, error):
         raise error
 
 
-@commands.cooldown(1, 60, commands.BucketType.member)
-@bot.command(aliases=["Gm", "GM", "good morning", "Good morning", "Good Morning"])
+@bot.command(aliases=["Gm", "GM"])
 async def gm(ctx):
+    await register_gm(ctx)
+
+
+@commands.cooldown(1, 60, commands.BucketType.member)
+@bot.group(invoke_without_command=True, aliases=["Good"])
+async def good(ctx):
+    pass
+
+
+@commands.cooldown(1, 60, commands.BucketType.member)
+@good.command(aliases=["Morning"])
+async def morning(ctx):
+    await register_gm(ctx)
+
+
+async def register_gm(ctx):
     user_id, username, server_id, server_name = (
         str(ctx.author.id),
         str(ctx.author),
@@ -65,10 +78,12 @@ async def gm(ctx):
                 1,
                 now.isoformat(),
                 1,
-                now.isoformat()
+                now.isoformat(),
             )
         )
-        await ctx.send(f"good morning ☀️ your gm count is **1**, current streak is 1 and longest streak is **1**")
+        await ctx.send(
+            "good morning ☀️ your gm count is **1**, current streak is 1 and longest streak is **1**"
+        )
 
         await ctx.message.add_reaction("✅")
         return
@@ -86,7 +101,7 @@ async def gm(ctx):
     current_streak_count = streak_record[7]
 
     if last_gm_date_localized == todays_date_localized:
-        await ctx.send(f"once per day only. try again tomorrow")
+        await ctx.send("once per day only. try again tomorrow")
         await ctx.message.add_reaction("❌")
         return
     elif last_gm_date_localized == yesterdays_date_localized:
@@ -128,7 +143,7 @@ async def gmself(ctx):
     eastern = ZoneInfo("America/Toronto")
 
     if not streak_record:
-        await ctx.send(f"no record of you saying gm")
+        await ctx.send("no record of you saying gm")
         await ctx.message.add_reaction("❌")
     else:
         await ctx.send(
@@ -144,10 +159,17 @@ async def gmboard(ctx):
     top_users_string = "no one gm'ed in this server"
     if top_users:
         top_users_string = "\n".join(
-            [f"**`{line[0]}:`** {line[1]} / {line[2]} / {line[3]}" for line in top_users]
+            [
+                f"**`{line[0]}:`** {line[1]} / {line[2]} / {line[3]}"
+                for line in top_users
+            ]
         )
     embed = discord.Embed(title="gm.bot leaderboard", color=0x87CEEB)
-    embed.add_field(name="User: Count / Current Streak / Longest Streak", value=top_users_string, inline=False)
+    embed.add_field(
+        name="User: Count / Current Streak / Longest Streak",
+        value=top_users_string,
+        inline=False,
+    )
     await ctx.send(embed=embed)
     await ctx.message.add_reaction("✅")
 
@@ -162,7 +184,7 @@ async def gmhelp(ctx):
     **gmboard** - top 10 gm'ers by streak
     **gmhelp** - shows this menu
 
-`Version 7.0-beta3`
+`Version 7.1`
 <https://github.com/jerry70450/gm.bot>
     """
     await ctx.send(help_text)

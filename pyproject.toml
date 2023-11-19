@@ -2,9 +2,9 @@
 name = "gm-bot"
 version = "7.0"
 description = "discord bot that tracks gm streaks"
-authors = ["Your Name <you@example.com>"]
+authors = ["Christopher Nguyen", "Jerry Chen"]
 readme = "README.md"
-packages = [{include = "gm"}]
+packages = []
 
 [tool.poetry.dependencies]
 python = "^3.10"
@@ -12,7 +12,7 @@ python = "^3.10"
 python-dotenv = "^0.21.0"
 
 [tool.poetry.group.dev.dependencies]
-black = "^22.8.0"
+ruff = "^0.1.6"
 
 [build-system]
 requires = ["poetry-core"]

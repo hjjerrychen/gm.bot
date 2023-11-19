@@ -1,4 +1,8 @@
-.env
+# python ignores
 __pycache__
+.venv
+# app ignores
+.env
 gm-bot.db
+# editor ignores
 .vscode
