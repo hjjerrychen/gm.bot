@@ -38,7 +38,7 @@ async def on_command_error(ctx, error):
 
 
 @commands.cooldown(1, 60, commands.BucketType.member)
-@bot.command(aliases=["Gm", "GM"])
+@bot.command(aliases=["Gm", "GM", "good morning", "Good morning", "Good Morning"])
 async def gm(ctx):
     user_id, username, server_id, server_name = (
         str(ctx.author.id),
