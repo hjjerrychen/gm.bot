@@ -42,15 +42,9 @@ async def gm(ctx):
 
 @commands.cooldown(1, 60, commands.BucketType.member)
 @bot.group(invoke_without_command=True, aliases=["Good"])
-async def good(ctx):
-    pass
-
-
-@commands.cooldown(1, 60, commands.BucketType.member)
-@good.command(aliases=["Morning"])
-async def morning(ctx):
-    await register_gm(ctx)
-
+async def good(ctx, next_word=""):
+    if next_word.lower() == "morning":
+        await register_gm(ctx)
 
 async def register_gm(ctx):
     user_id, username, server_id, server_name = (
