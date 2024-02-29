@@ -27,10 +27,10 @@ async def on_command_error(ctx, error):
     if isinstance(error, commands.errors.CommandNotFound):
         return
     elif isinstance(error, commands.CommandOnCooldown):
-        await ctx.send(
-            f"using command too soon. try again in {round(error.retry_after)} seconds"
-        )
-        await ctx.message.add_reaction("❌")
+        # await ctx.send(
+        #     f"using command too soon. try again in {round(error.retry_after)} seconds"
+        # )
+        await ctx.message.add_reaction("⏳")
     else:
         raise error
 
@@ -75,9 +75,9 @@ async def register_gm(ctx):
                 now.isoformat(),
             )
         )
-        await ctx.send(
-            "good morning ☀️ your gm count is **1**, current streak is 1 and longest streak is **1**"
-        )
+        # await ctx.send(
+        #     "good morning ☀️ your gm count is **1**, current streak is 1 and longest streak is **1**"
+        # )
 
         await ctx.message.add_reaction("✅")
         return
@@ -95,7 +95,7 @@ async def register_gm(ctx):
     current_streak_count = streak_record[7]
 
     if last_gm_date_localized == todays_date_localized:
-        await ctx.send("once per day only. try again tomorrow")
+        # await ctx.send("once per day only. try again tomorrow")
         await ctx.message.add_reaction("❌")
         return
     elif last_gm_date_localized == yesterdays_date_localized:
@@ -123,9 +123,9 @@ async def register_gm(ctx):
             key,
         )
     )
-    await ctx.send(
-        f"good morning ☀️ your gm count is **{current_count}**, current streak is **{current_streak_count}**, and longest streak is **{longest_streak_count}**"
-    )
+    # await ctx.send(
+    #     f"good morning ☀️ your gm count is **{current_count}**, current streak is **{current_streak_count}**, and longest streak is **{longest_streak_count}**"
+    # )
     await ctx.message.add_reaction("✅")
 
 
